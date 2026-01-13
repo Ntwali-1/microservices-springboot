@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Service Discovery
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - land-platform-network
+
+  # Configuration Server
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+    networks:
+      - land-platform-network
+
+networks:
+  land-platform-network:
+    driver: bridge
+
+# Volumes section removed since we're not using databases yet
+# Will be added back as services are built
