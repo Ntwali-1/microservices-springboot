@@ -1,66 +1,52 @@
 package com.services.user_service.entity;
 
-import com.services.user_service.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.Collection;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
+@Entity
+@Table(name = "users")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "_user")
-public class User implements UserDetails {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(nullable = false)
+    private String fullName;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
+    @Column(length = 20)
+    private String phoneNumber;
 
-    @Override
-    public String getUsername() {
-        return email;
-    }
+    @Column(nullable = false)
+    private Boolean isVerified = false;
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    @Column(nullable = false)
+    private Boolean isActive = true;
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<UserRole> roles = new HashSet<>();
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
