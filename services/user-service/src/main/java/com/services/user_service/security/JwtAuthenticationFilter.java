@@ -39,15 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String jwt = authHeader.substring(7);
-            String userEmail = jwtService.getEmailFromToken(jwt);
+            String userEmail = jwtService.extractEmail(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                if (jwtService.validateToken(jwt)) {
-                    String role = jwtService.getRoleFromToken(jwt);
+                if (jwtService.validateToken(jwt, userEmail)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userEmail,
                             null,
-                            role != null ? Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)) : Collections.emptyList()
+                            null
                     );
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
