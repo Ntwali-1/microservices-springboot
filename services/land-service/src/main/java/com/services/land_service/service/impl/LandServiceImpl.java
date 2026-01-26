@@ -1,4 +1,224 @@
 package com.services.land_service.service.impl;
 
-public class LandServiceImpl {
+import com.services.land_service.dto.*;
+import com.services.land_service.entity.Land;
+import com.services.land_service.entity.Land.LandStatus;
+import com.services.land_service.exception.LandNotFoundException;
+import com.services.land_service.mapper.LandMapper;
+import com.services.land_service.repository.LandRepository;
+import com.services.land_service.service.LandService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class LandServiceImpl implements LandService {
+
+    private final LandRepository landRepository;
+    private final LandMapper landMapper;
+
+    @Override
+    @Transactional
+    public LandResponse createLand(CreateLandRequest request) {
+        log.info("Creating new land in {}, {}, {}", request.getProvince(), request.getDistrict(), request.getSector());
+
+        Land land = new Land();
+        land.setProvince(request.getProvince());
+        land.setDistrict(request.getDistrict());
+        land.setSector(request.getSector());
+        land.setAreaSqMeters(request.getAreaSqMeters());
+        land.setAvailabilityType(request.getAvailabilityType());
+        land.setStatus(LandStatus.AVAILABLE);
+        land.setImageUrls(new ArrayList<>());
+        land.setDocumentUrls(new ArrayList<>());
+
+        Land savedLand = landRepository.save(land);
+        log.info("Land created successfully with ID: {}", savedLand.getId());
+
+        return landMapper.toResponse(savedLand);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LandResponse getLandById(Long id) {
+        log.info("Fetching land with ID: {}", id);
+
+        Land land = landRepository.findById(id)
+                .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        return landMapper.toResponse(land);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LandSummaryResponse> getAllLands(Pageable pageable) {
+        log.info("Fetching all lands with pagination");
+
+        return landRepository.findAll(pageable)
+                .map(landMapper::toSummaryResponse);
+    }
+
+    @Override
+    @Transactional
+    public LandResponse updateLand(Long id, UpdateLandRequest request) {
+        log.info("Updating land with ID: {}", id);
+
+        Land land = landRepository.findById(id)
+                .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        // Update only provided fields
+        if (request.getProvince() != null) {
+            land.setProvince(request.getProvince());
+        }
+        if (request.getDistrict() != null) {
+            land.setDistrict(request.getDistrict());
+        }
+        if (request.getSector() != null) {
+            land.setSector(request.getSector());
+        }
+        if (request.getAreaSqMeters() != null) {
+            land.setAreaSqMeters(request.getAreaSqMeters());
+        }
+        if (request.getAvailabilityType() != null) {
+            land.setAvailabilityType(request.getAvailabilityType());
+        }
+
+        Land updatedLand = landRepository.save(land);
+        log.info("Land updated successfully: {}", id);
+
+        return landMapper.toResponse(updatedLand);
+    }
+
+    @Override
+    @Transactional
+    public LandResponse updateLandStatus(Long id, LandStatus status) {
+        log.info("Updating land status for ID: {} to {}", id, status);
+
+        Land land = landRepository.findById(id)
+                .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        land.setStatus(status);
+        Land updatedLand = landRepository.save(land);
+
+        log.info("Land status updated successfully");
+        return landMapper.toResponse(updatedLand);
+    }
+
+    @Override
+    @Transactional
+    public void deleteLand(Long id) {
+        log.info("Deleting land with ID: {}", id);
+
+        if (!landRepository.existsById(id)) {
+            throw new LandNotFoundException("Land not found with ID: " + id);
+        }
+
+        landRepository.deleteById(id);
+        log.info("Land deleted successfully: {}", id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LandSummaryResponse> searchLandsByLocation(String province, String district, String sector, Pageable pageable) {
+        log.info("Searching lands by location - Province: {}, District: {}, Sector: {}", province, district, sector);
+
+        if (sector != null && !sector.isBlank()) {
+            return landRepository.findBySectorContainingIgnoreCase(sector, pageable)
+                    .map(landMapper::toSummaryResponse);
+        } else if (district != null && !district.isBlank()) {
+            return landRepository.findByDistrictContainingIgnoreCase(district, pageable)
+                    .map(landMapper::toSummaryResponse);
+        } else if (province != null && !province.isBlank()) {
+            return landRepository.findByProvinceContainingIgnoreCase(province, pageable)
+                    .map(landMapper::toSummaryResponse);
+        }
+
+        return Page.empty();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LandSummaryResponse> getLandsByStatus(LandStatus status, Pageable pageable) {
+        log.info("Fetching lands with status: {}", status);
+
+        return landRepository.findByStatus(status, pageable)
+                .map(landMapper::toSummaryResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LandSummaryResponse> getLandsByAreaRange(Double minArea, Double maxArea, Pageable pageable) {
+        log.info("Fetching lands with area between {} and {} sq meters", minArea, maxArea);
+
+        return landRepository.findByAreaSqMetersBetween(minArea, maxArea, pageable)
+                .map(landMapper::toSummaryResponse);
+    }
+
+    @Override
+    @Transactional
+    public LandResponse addImages(Long id, List<String> imageUrls) {
+        log.info("Adding {} images to land ID: {}", imageUrls.size(), id);
+
+        Land land = landRepository.findById(id)
+                .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        land.getImageUrls().addAll(imageUrls);
+        Land updatedLand = landRepository.save(land);
+
+        log.info("Images added successfully");
+        return landMapper.toResponse(updatedLand);
+    }
+
+    @Override
+    @Transactional
+    public LandResponse addDocuments(Long id, List<String> documentUrls) {
+        log.info("Adding {} documents to land ID: {}", documentUrls.size(), id);
+
+        Land land = landRepository.findById(id)
+                .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        land.getDocumentUrls().addAll(documentUrls);
+        Land updatedLand = landRepository.save(land);
+
+        log.info("Documents added successfully");
+        return landMapper.toResponse(updatedLand);
+    }
+
+    @Override
+    @Transactional
+    public LandResponse removeImage(Long id, String imageUrl) {
+        log.info("Removing image from land ID: {}", id);
+
+        Land land = landRepository.findById(id)
+                .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        land.getImageUrls().remove(imageUrl);
+        Land updatedLand = landRepository.save(land);
+
+        log.info("Image removed successfully");
+        return landMapper.toResponse(updatedLand);
+    }
+
+    @Override
+    @Transactional
+    public LandResponse removeDocument(Long id, String documentUrl) {
+        log.info("Removing document from land ID: {}", id);
+
+        Land land = landRepository.findById(id)
+                .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        land.getDocumentUrls().remove(documentUrl);
+        Land updatedLand = landRepository.save(land);
+
+        log.info("Document removed successfully");
+        return landMapper.toResponse(updatedLand);
+    }
 }
