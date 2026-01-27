@@ -1,4 +1,4 @@
-package com.services.user_service.config;
+package com.services.land_service.config;
 
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
@@ -25,7 +25,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("TerraFund")
                         .version("1.0")
-                        .description("Users API Documentation"))
+                        .description("Land API Documentation"))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
     }
 

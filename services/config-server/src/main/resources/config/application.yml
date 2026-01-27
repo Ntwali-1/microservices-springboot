@@ -4,18 +4,12 @@ server:
 spring:
   application:
     name: config-server
-  
-  # IMPORTANT: Explicitly set profiles
-  profiles:
-    active: native
-  
+
   cloud:
     config:
       server:
-        # Native profile configuration (local files)
         native:
           search-locations: classpath:/config
-        # Git profile (disabled for now)
         git:
           uri: file://${user.home}/config-repo
           default-label: main

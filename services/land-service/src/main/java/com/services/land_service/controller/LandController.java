@@ -63,10 +63,6 @@ public class LandController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Update land
-     * PUT /api/lands/{id}
-     */
     @PutMapping("/{id}")
     public ResponseEntity<LandResponse> updateLand(
             @PathVariable Long id,
@@ -75,11 +71,7 @@ public class LandController {
         LandResponse response = landService.updateLand(id, request);
         return ResponseEntity.ok(response);
     }
-
-    /**
-     * Update land status
-     * PATCH /api/lands/{id}/status
-     */
+    
     @PatchMapping("/{id}/status")
     public ResponseEntity<LandResponse> updateLandStatus(
             @PathVariable Long id,
