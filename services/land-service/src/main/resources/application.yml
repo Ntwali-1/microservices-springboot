@@ -13,7 +13,6 @@ spring:
       fail-fast: false
       enabled: true
 
-  # Database Configuration
   datasource:
     url: jdbc:postgresql://localhost:5432/landdb
     username: postgres
@@ -35,8 +34,6 @@ spring:
     open-in-view: false
 
 
-
-# Eureka Configuration
 eureka:
   client:
     service-url:
@@ -48,12 +45,6 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.value}
 
-
-# JWT Configuration (for validation)
-jwt:
-  secret: your-256-bit-secret-key-change-this-in-production
-
-# Application Specific
 application:
   land:
     image:
