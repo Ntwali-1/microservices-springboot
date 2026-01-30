@@ -27,10 +27,11 @@ public class LandServiceImpl implements LandService {
 
     @Override
     @Transactional
-    public LandResponse createLand(CreateLandRequest request) {
+    public LandResponse createLand(CreateLandRequest request,Long currentUserId) {
         log.info("Creating new land in {}, {}, {}", request.getProvince(), request.getDistrict(), request.getSector());
 
         Land land = new Land();
+        land.setOwnerId(currentUserId);
         land.setProvince(request.getProvince());
         land.setDistrict(request.getDistrict());
         land.setSector(request.getSector());

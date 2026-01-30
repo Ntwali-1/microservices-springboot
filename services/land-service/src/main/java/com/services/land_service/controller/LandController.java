@@ -2,6 +2,7 @@ package com.services.land_service.controller;
 
 import com.services.land_service.dto.*;
 import com.services.land_service.entity.Land.LandStatus;
+import com.services.land_service.security.SecurityUtils;
 import com.services.land_service.service.LandService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/lands")
 @RequiredArgsConstructor
@@ -25,25 +29,31 @@ public class LandController {
      * POST /api/lands
      */
     @PostMapping
-    public ResponseEntity<LandResponse> createLand(@Valid @RequestBody CreateLandRequest request) {
-        LandResponse response = landService.createLand(request);
+    @PreAuthorize("hasRole('LAND_OWNER')")
+    public ResponseEntity<LandResponse> createLand(
+            @Valid @RequestBody CreateLandRequest request
+    ) {
+        log.info("➡️  [CREATE LAND] Request received");
+
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        log.info("👤 Authenticated user ID: {}", currentUserId);
+
+        log.info("📝 Land request payload: {}", request);
+
+        LandResponse response = landService.createLand(request, currentUserId);
+
+        log.info("✅ Land created successfully with ID: {}", response.getId());
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Get land by ID
-     * GET /api/lands/{id}
-     */
+
     @GetMapping("/{id}")
     public ResponseEntity<LandResponse> getLandById(@PathVariable Long id) {
         LandResponse response = landService.getLandById(id);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get all lands with pagination and sorting
-     * GET /api/lands?page=0&size=10&sortBy=createdAt&sortDir=DESC
-     */
     @GetMapping
     public ResponseEntity<Page<LandSummaryResponse>> getAllLands(
             @RequestParam(defaultValue = "0") int page,
@@ -79,20 +89,12 @@ public class LandController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Delete land
-     * DELETE /api/lands/{id}
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLand(@PathVariable Long id) {
         landService.deleteLand(id);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Search lands by location
-     * GET /api/lands/search/location?province=Kigali&district=Gasabo&sector=Remera
-     */
     @GetMapping("/search/location")
     public ResponseEntity<Page<LandSummaryResponse>> searchLandsByLocation(
             @RequestParam(required = false) String province,
@@ -108,10 +110,6 @@ public class LandController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get lands by status
-     * GET /api/lands/status/{status}
-     */
     @GetMapping("/status/{status}")
     public ResponseEntity<Page<LandSummaryResponse>> getLandsByStatus(
             @PathVariable LandStatus status,
@@ -124,10 +122,6 @@ public class LandController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get lands by area range
-     * GET /api/lands/search/area?minArea=1000&maxArea=5000
-     */
     @GetMapping("/search/area")
     public ResponseEntity<Page<LandSummaryResponse>> getLandsByAreaRange(
             @RequestParam Double minArea,
@@ -142,10 +136,6 @@ public class LandController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Add images to land
-     * POST /api/lands/{id}/images
-     */
     @PostMapping("/{id}/images")
     public ResponseEntity<LandResponse> addImages(
             @PathVariable Long id,
@@ -155,10 +145,6 @@ public class LandController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Add documents to land
-     * POST /api/lands/{id}/documents
-     */
     @PostMapping("/{id}/documents")
     public ResponseEntity<LandResponse> addDocuments(
             @PathVariable Long id,
@@ -168,10 +154,6 @@ public class LandController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Remove image from land
-     * DELETE /api/lands/{id}/images
-     */
     @DeleteMapping("/{id}/images")
     public ResponseEntity<LandResponse> removeImage(
             @PathVariable Long id,
@@ -181,10 +163,6 @@ public class LandController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Remove document from land
-     * DELETE /api/lands/{id}/documents
-     */
     @DeleteMapping("/{id}/documents")
     public ResponseEntity<LandResponse> removeDocument(
             @PathVariable Long id,

@@ -5,7 +5,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,63 +18,55 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("No JWT token found in request");
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            String token = authHeader.substring(7);
+            String jwt = authHeader.substring(7);
 
-            if (!jwtUtil.validateToken(token)) {
-                log.error("Invalid or expired JWT token");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid or expired token");
-                return;
+            if (jwtService.validateToken(jwt)) {
+                String userEmail = jwtService.extractEmail(jwt);
+                Long userId = jwtService.extractUserId(jwt);
+                List<String> roles = jwtService.extractRoles(jwt);
+
+                if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                    // Convert roles to GrantedAuthority
+                    List<SimpleGrantedAuthority> authorities = roles != null ?
+                            roles.stream()
+                                    .map(SimpleGrantedAuthority::new)
+                                    .collect(Collectors.toList())
+                            : List.of();
+
+                    // Create custom authentication object with userId
+                    UserAuthenticationToken authToken = new UserAuthenticationToken(
+                            userEmail,
+                            userId,
+                            null,
+                            authorities
+                    );
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
-
-            String email = jwtUtil.extractEmail(token);
-            Long userId = jwtUtil.extractUserId(token);
-            List<String> roles = jwtUtil.extractRoles(token);
-
-            log.debug("Authenticated user: {} with roles: {}", email, roles);
-
-            request.setAttribute("userId", userId);
-            request.setAttribute("email", email);
-            request.setAttribute("roles", roles);
-
-            List<SimpleGrantedAuthority> authorities = roles.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
-
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(email, null, authorities);
-
-            authentication.setDetails(
-                    new WebAuthenticationDetailsSource().buildDetails(request)
-            );
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
         } catch (Exception e) {
-            log.error("JWT authentication failed: {}", e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Authentication failed");
-            return;
+            logger.error("JWT validation error: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);

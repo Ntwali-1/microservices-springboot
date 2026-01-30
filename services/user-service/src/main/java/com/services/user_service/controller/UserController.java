@@ -3,6 +3,8 @@ package com.services.user_service.controller;
 import com.services.user_service.dto.RoleSelectionRequest;
 import com.services.user_service.dto.UpdateUserRequest;
 import com.services.user_service.dto.UserResponse;
+import com.services.user_service.entity.User;
+import com.services.user_service.repository.UserRepository;
 import com.services.user_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @PostMapping("/select-role")
     public ResponseEntity<Map<String, Object>> selectRole(@Valid @RequestBody RoleSelectionRequest request) {
@@ -54,9 +57,16 @@ public class UserController {
 
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication != null && authentication.isAuthenticated()) {
-            return 1L;
+            String email = authentication.getName();
+
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            return user.getId();
         }
+
         throw new RuntimeException("User not authenticated");
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface LandService {
 
-    LandResponse createLand(CreateLandRequest request);
+    LandResponse createLand(CreateLandRequest request,Long currentUserId);
 
     LandResponse getLandById(Long id);
 

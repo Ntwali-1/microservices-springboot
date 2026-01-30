@@ -18,6 +18,7 @@ public class UserResponse {
     private String fullName;
     private String phoneNumber;
     private Boolean isVerified;
+    private String jwtToken;
     private Boolean isActive;
     private Set<Role> roles;
     private LocalDateTime createdAt;

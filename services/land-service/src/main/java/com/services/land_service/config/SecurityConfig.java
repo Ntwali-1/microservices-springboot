@@ -26,7 +26,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Swagger UI endpoints
                         .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()  // Changed from /v3/api-docs to /v3/api-docs/**
+                        .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/swagger-resources/**").permitAll()
                         .requestMatchers("/configuration/**").permitAll()
@@ -35,13 +35,13 @@ public class SecurityConfig {
                         // Actuator endpoints
                         .requestMatchers("/actuator/**").permitAll()
 
-                        // Public land endpoints
+                        // Public land endpoints - anyone can view
                         .requestMatchers("/api/lands").permitAll()
                         .requestMatchers("/api/lands/{id}").permitAll()
                         .requestMatchers("/api/lands/search/**").permitAll()
 
-                        // Protected endpoints (authentication required)
-                        .requestMatchers("/api/lands/**").authenticated()
+                        // Protected endpoints - only LAND_OWNER can access
+                        .requestMatchers("/api/lands/**").hasRole("LAND_OWNER")
 
                         .anyRequest().authenticated()
                 )

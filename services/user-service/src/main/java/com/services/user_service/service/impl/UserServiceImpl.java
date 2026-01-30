@@ -34,12 +34,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse signup(SignupRequest request) {
-        // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
         }
 
-        // Create new user
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -50,7 +48,6 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
 
-        // Create verification token
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(token);
@@ -77,7 +74,6 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Account is deactivated");
         }
 
-        // Generate and save JWT token
         String token = jwtService.generateToken(user);
         user.setJwt(token);
         userRepository.save(user);
@@ -93,7 +89,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse selectRole(Long userId, Role role) {
-        User user = userRepository.findByIdWithRoles(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Check if user already has this role
@@ -196,6 +192,7 @@ public class UserServiceImpl implements UserService {
         response.setFullName(user.getFullName());
         response.setPhoneNumber(user.getPhoneNumber());
         response.setIsVerified(user.getIsVerified());
+        response.setJwtToken(user.getJwt());
         response.setIsActive(user.getIsActive());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());

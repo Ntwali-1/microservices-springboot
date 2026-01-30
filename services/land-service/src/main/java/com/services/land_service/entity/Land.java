@@ -38,6 +38,9 @@ public class Land {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private Long ownerId;
+
     @Column(name = "province")
     private String province;
 
