@@ -15,6 +15,7 @@ public class LandMapper {
 
         LandResponse response = new LandResponse();
         response.setId(land.getId());
+        response.setOwnerId(land.getOwnerId());
         response.setProvince(land.getProvince());
         response.setDistrict(land.getDistrict());
         response.setSector(land.getSector());
@@ -29,9 +30,6 @@ public class LandMapper {
         return response;
     }
 
-    /**
-     * Convert Land entity to LandSummaryResponse DTO (for lists)
-     */
     public LandSummaryResponse toSummaryResponse(Land land) {
         if (land == null) {
             return null;
@@ -39,6 +37,7 @@ public class LandMapper {
 
         LandSummaryResponse response = new LandSummaryResponse();
         response.setId(land.getId());
+        response.setOwnerId(land.getOwnerId());
         response.setProvince(land.getProvince());
         response.setDistrict(land.getDistrict());
         response.setSector(land.getSector());

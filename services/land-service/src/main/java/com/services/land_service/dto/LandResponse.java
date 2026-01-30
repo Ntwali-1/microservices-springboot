@@ -19,6 +19,8 @@ public class LandResponse {
 
     private Long id;
 
+    private Long ownerId;
+
     private String province;
 
     private String district;

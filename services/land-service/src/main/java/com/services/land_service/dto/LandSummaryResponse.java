@@ -23,6 +23,8 @@ public class LandSummaryResponse {
 
     private Long id;
 
+    private Long ownerId;
+
     private String province;
 
     private String district;
