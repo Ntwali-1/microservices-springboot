@@ -15,11 +15,11 @@ public interface LandService {
 
     Page<LandSummaryResponse> getAllLands(Pageable pageable);
 
-    LandResponse updateLand(Long id, UpdateLandRequest request);
+    LandResponse updateLand(Long id, UpdateLandRequest request, Long currentUserId);
 
-    LandResponse updateLandStatus(Long id, LandStatus status);
+    LandResponse updateLandStatus(Long id, LandStatus status, Long currentUserId);
 
-    void deleteLand(Long id);
+    void deleteLand(Long id, Long currentUserId);
 
     Page<LandSummaryResponse> searchLandsByLocation(String province, String district, String sector, Pageable pageable);
 
@@ -27,11 +27,11 @@ public interface LandService {
 
     Page<LandSummaryResponse> getLandsByAreaRange(Double minArea, Double maxArea, Pageable pageable);
 
-    LandResponse addImages(Long id, List<String> imageUrls);
+    LandResponse addImages(Long id, List<String> imageUrls, Long currentUserId);
 
-    LandResponse addDocuments(Long id, List<String> documentUrls);
+    LandResponse addDocuments(Long id, List<String> documentUrls, Long currentUserId);
 
-    LandResponse removeImage(Long id, String imageUrl);
+    LandResponse removeImage(Long id, String imageUrl, Long currentUserId);
 
-    LandResponse removeDocument(Long id, String documentUrl);
+    LandResponse removeDocument(Long id, String documentUrl,Long currentUserId);
 }

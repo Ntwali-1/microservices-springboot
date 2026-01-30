@@ -72,26 +72,35 @@ public class LandController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('LAND_ONWER')")
     public ResponseEntity<LandResponse> updateLand(
             @PathVariable Long id,
             @Valid @RequestBody UpdateLandRequest request) {
 
-        LandResponse response = landService.updateLand(id, request);
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        LandResponse response = landService.updateLand(id, request, currentUserId);
         return ResponseEntity.ok(response);
     }
     
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('LAND_ONWER')")
     public ResponseEntity<LandResponse> updateLandStatus(
             @PathVariable Long id,
             @RequestParam LandStatus status) {
 
-        LandResponse response = landService.updateLandStatus(id, status);
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        LandResponse response = landService.updateLandStatus(id, status, currentUserId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('LAND_ONWER')")
     public ResponseEntity<Void> deleteLand(@PathVariable Long id) {
-        landService.deleteLand(id);
+
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        landService.deleteLand(id,currentUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -137,11 +146,14 @@ public class LandController {
     }
 
     @PostMapping("/{id}/images")
+    @PreAuthorize("hasRole('LAND_ONWER')")
     public ResponseEntity<LandResponse> addImages(
             @PathVariable Long id,
             @Valid @RequestBody UploadImagesRequest request) {
 
-        LandResponse response = landService.addImages(id, request.getImageUrls());
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        LandResponse response = landService.addImages(id, request.getImageUrls(), currentUserId);
         return ResponseEntity.ok(response);
     }
 
@@ -150,7 +162,9 @@ public class LandController {
             @PathVariable Long id,
             @Valid @RequestBody UploadDocumentsRequest request) {
 
-        LandResponse response = landService.addDocuments(id, request.getDocumentUrls());
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        LandResponse response = landService.addDocuments(id, request.getDocumentUrls(), currentUserId);
         return ResponseEntity.ok(response);
     }
 
@@ -159,7 +173,9 @@ public class LandController {
             @PathVariable Long id,
             @RequestParam String imageUrl) {
 
-        LandResponse response = landService.removeImage(id, imageUrl);
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        LandResponse response = landService.removeImage(id, imageUrl, currentUserId);
         return ResponseEntity.ok(response);
     }
 
@@ -168,7 +184,9 @@ public class LandController {
             @PathVariable Long id,
             @RequestParam String documentUrl) {
 
-        LandResponse response = landService.removeDocument(id, documentUrl);
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        LandResponse response = landService.removeDocument(id, documentUrl, currentUserId);
         return ResponseEntity.ok(response);
     }
 }

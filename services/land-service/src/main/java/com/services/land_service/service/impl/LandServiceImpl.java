@@ -7,6 +7,7 @@ import com.services.land_service.exception.LandNotFoundException;
 import com.services.land_service.mapper.LandMapper;
 import com.services.land_service.repository.LandRepository;
 import com.services.land_service.service.LandService;
+import jakarta.ws.rs.ForbiddenException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -69,11 +70,15 @@ public class LandServiceImpl implements LandService {
 
     @Override
     @Transactional
-    public LandResponse updateLand(Long id, UpdateLandRequest request) {
+    public LandResponse updateLand(Long id, UpdateLandRequest request, Long currentUserId) {
         log.info("Updating land with ID: {}", id);
 
         Land land = landRepository.findById(id)
                 .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        if (!land.getOwnerId().equals(currentUserId)) {
+            throw new ForbiddenException("You don't have permission to update this land. Only the owner can update it.");
+        }
 
         // Update only provided fields
         if (request.getProvince() != null) {
@@ -100,11 +105,15 @@ public class LandServiceImpl implements LandService {
 
     @Override
     @Transactional
-    public LandResponse updateLandStatus(Long id, LandStatus status) {
+    public LandResponse updateLandStatus(Long id, LandStatus status, Long currentUserId) {
         log.info("Updating land status for ID: {} to {}", id, status);
 
         Land land = landRepository.findById(id)
                 .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        if (!land.getOwnerId().equals(currentUserId)) {
+            throw new ForbiddenException("You don't have permission to update this land status. Only the owner can update it.");
+        }
 
         land.setStatus(status);
         Land updatedLand = landRepository.save(land);
@@ -115,11 +124,15 @@ public class LandServiceImpl implements LandService {
 
     @Override
     @Transactional
-    public void deleteLand(Long id) {
+    public void deleteLand(Long id, Long currentUserId) {
         log.info("Deleting land with ID: {}", id);
 
-        if (!landRepository.existsById(id)) {
-            throw new LandNotFoundException("Land not found with ID: " + id);
+        Land land = landRepository.findById(id)
+                .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        // Check ownership
+        if (!land.getOwnerId().equals(currentUserId)) {
+            throw new ForbiddenException("You don't have permission to delete this land. Only the owner can delete it.");
         }
 
         landRepository.deleteById(id);
@@ -165,11 +178,16 @@ public class LandServiceImpl implements LandService {
 
     @Override
     @Transactional
-    public LandResponse addImages(Long id, List<String> imageUrls) {
+    public LandResponse addImages(Long id, List<String> imageUrls, Long currentUserId) {
         log.info("Adding {} images to land ID: {}", imageUrls.size(), id);
 
         Land land = landRepository.findById(id)
                 .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        // Check ownership
+        if (!land.getOwnerId().equals(currentUserId)) {
+            throw new ForbiddenException("You don't have permission to upload images this land. Only the owner can do it.");
+        }
 
         land.getImageUrls().addAll(imageUrls);
         Land updatedLand = landRepository.save(land);
@@ -180,11 +198,16 @@ public class LandServiceImpl implements LandService {
 
     @Override
     @Transactional
-    public LandResponse addDocuments(Long id, List<String> documentUrls) {
+    public LandResponse addDocuments(Long id, List<String> documentUrls, Long currentUserId) {
         log.info("Adding {} documents to land ID: {}", documentUrls.size(), id);
 
         Land land = landRepository.findById(id)
                 .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        // Check ownership
+        if (!land.getOwnerId().equals(currentUserId)) {
+            throw new ForbiddenException("You don't have permission to upload documents to this land. Only the owner can do it.");
+        }
 
         land.getDocumentUrls().addAll(documentUrls);
         Land updatedLand = landRepository.save(land);
@@ -195,11 +218,16 @@ public class LandServiceImpl implements LandService {
 
     @Override
     @Transactional
-    public LandResponse removeImage(Long id, String imageUrl) {
+    public LandResponse removeImage(Long id, String imageUrl, Long currentUserId) {
         log.info("Removing image from land ID: {}", id);
 
         Land land = landRepository.findById(id)
                 .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        // Check ownership
+        if (!land.getOwnerId().equals(currentUserId)) {
+            throw new ForbiddenException("You don't have permission to upload documents to this land. Only the owner can do it.");
+        }
 
         land.getImageUrls().remove(imageUrl);
         Land updatedLand = landRepository.save(land);
@@ -210,11 +238,16 @@ public class LandServiceImpl implements LandService {
 
     @Override
     @Transactional
-    public LandResponse removeDocument(Long id, String documentUrl) {
+    public LandResponse removeDocument(Long id, String documentUrl, Long currentUserId) {
         log.info("Removing document from land ID: {}", id);
 
         Land land = landRepository.findById(id)
                 .orElseThrow(() -> new LandNotFoundException("Land not found with ID: " + id));
+
+        // Check ownership
+        if (!land.getOwnerId().equals(currentUserId)) {
+            throw new ForbiddenException("You don't have permission to upload documents to this land. Only the owner can do it.");
+        }
 
         land.getDocumentUrls().remove(documentUrl);
         Land updatedLand = landRepository.save(land);
